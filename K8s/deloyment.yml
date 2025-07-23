@@ -1,0 +1,49 @@
+# k8s/deployment.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-keda-app-deployment
+  namespace: hello-keda-app
+  labels:
+    app: hello-keda-app
+spec:
+  replicas: 1 # Start with 1 replica, KEDA will scale it
+  selector:
+    matchLabels:
+      app: hello-keda-app
+  template:
+    metadata:
+      labels:
+        app: hello-keda-app
+    spec:
+      # Required for Fargate. This creates an IAM role for your pods to assume.
+      # Replace <YOUR_EKS_CLUSTER_NAME> with your actual EKS cluster name.
+      # The IAM role 'arn:aws:iam::<AWS_ACCOUNT_ID>:role/EKSFargatePodExecutionRole'
+      # should have permissions to pull from ECR and interact with other AWS services as needed.
+      # You'll create this role later or ensure your Fargate profile uses it.
+      # If using IRSA, you'd specify serviceAccountName here.
+      serviceAccountName: default # Or a custom SA if you're using IRSA for ECR pull
+      
+      # Fargate pods usually don't need explicit tolerations for compute-type:fargate
+      # if the Fargate Profile is correctly set up to match the namespace.
+      # If you encounter pending pods due to this, you might need to add:
+      # tolerations:
+      # - key: "eks.amazonaws.com/compute-type"
+      #   operator: "Equal"
+      #   value: "fargate"
+      #   effect: "NoSchedule"
+
+      containers:
+        - name: hello-keda-app-container
+          # This image will be built and pushed to ECR
+          # Replace <AWS_ACCOUNT_ID> and <AWS_REGION> with your actual values
+          image: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/hello-keda-app:latest
+          ports:
+            - containerPort: 5000
+          resources:
+            requests:
+              cpu: "100m" # Request minimum CPU for KEDA to scale
+              memory: "128Mi"
+            limits:
+              cpu: "500m" # Limit maximum CPU for the container
+              memory: "256Mi"

@@ -1,0 +1,13 @@
+# cluster-config.yaml
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: hello-keda-cluster # Matches your EKS_CLUSTER_NAME
+  region: us-east-2         # Matches your AWS_REGION
+
+fargateProfiles:
+  - name: hello-keda-fargate-profile # This is the profile name
+    selectors:
+      - namespace: hello-keda-app    # This namespace will be managed by Fargate
+      - namespace: keda

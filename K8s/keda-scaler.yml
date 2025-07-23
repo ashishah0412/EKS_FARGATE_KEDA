@@ -1,0 +1,24 @@
+# k8s/keda-scaler.yml
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: hello-keda-cpu-scaler
+  namespace: hello-keda-app
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: hello-keda-app-deployment # Refers to the Deployment defined in deployment.yml
+  pollingInterval: 30 # How often KEDA checks for metrics (seconds)
+  cooldownPeriod: 300 # How long to wait before scaling down after activity subsides (seconds)
+  minReplicaCount: 1  # Minimum number of replicas
+  maxReplicaCount: 5  # Maximum number of replicas
+  triggers:
+  - type: cpu
+    metadata:
+      # Scale when average CPU utilization across pods exceeds 50%
+      value: "50"
+      # `averageValue` for resource metrics uses the average usage across pods.
+      # `utilization` is more common and represents percentage of requested CPU.
+      # If you're on Fargate, `utilization` is often preferred for CPU-based scaling.
+      # KEDA fetches metrics from metrics-server.
