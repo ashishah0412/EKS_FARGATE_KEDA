@@ -7,7 +7,9 @@ metadata:
   region: us-east-2         # Matches your AWS_REGION
 
 fargateProfiles:
-  - name: hello-keda-fargate-profile # This is the profile name
+  - name: hello-keda-app-fargate-profile # Distinct name for the app's profile
     selectors:
       - namespace: hello-keda-app    # This namespace will be managed by Fargate
-      - namespace: keda
+  - name: keda-fargate-profile       # Distinct name for KEDA's profile
+    selectors:
+      - namespace: keda              # This namespace will also be managed by Fargate
