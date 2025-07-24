@@ -1,14 +1,13 @@
-# k8s/service.yml
 apiVersion: v1
 kind: Service
 metadata:
-  name: hello-keda-app-service
-  namespace: hello-keda-app
+  name: hello-service
+  namespace: python-app
 spec:
   selector:
-    app: hello-keda-app
+    app: hello-python
   ports:
     - protocol: TCP
-      port: 80       # Service port
-      targetPort: 5000 # Container port
-  type: ClusterIP # Internal to the cluster. For external access, use LoadBalancer or Ingress.
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer

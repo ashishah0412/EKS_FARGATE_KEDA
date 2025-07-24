@@ -1,83 +1,125 @@
-# Hello KEDA Fargate Application
 
-This repository contains a simple "Hello World" Flask application, Dockerized, and set up for deployment on AWS EKS Fargate with KEDA for CPU-based auto-scaling.
+# 🐍 Python Hello World on EKS Fargate with KEDA Autoscaling
 
-## Folder Structure:
+This project demonstrates how to:
+- Dockerize a simple Python Flask app
+- Push it to Amazon ECR
+- Deploy it on an Amazon EKS cluster with Fargate
+- Integrate KEDA for CPU-based autoscaling
+- Automate everything with shell scripts
+- Clean up all resources efficiently
 
-* `app/`: Contains the Python Flask application and its dependencies.
-* `k8s/`: Contains Kubernetes manifest files for deployment.
-* `Dockerfile`: Defines how to build the Docker image for the application.
-* `deploy-pipeline.sh`: A shell script to automate the entire deployment process (Docker build/push to ECR, EKS cluster kubeconfig update, KEDA deployment, and application deployment).
+---
 
-## Prerequisites:
+## 📁 Folder Structure
 
-1.  **AWS Account:** With necessary permissions for EKS, ECR, IAM.
-2.  **AWS CLI:** Configured with your AWS credentials.
-3.  **kubectl:** Kubernetes command-line tool.
-4.  **Docker:** Docker installed and running on your local machine or CI/CD runner.
-5.  **An EKS Cluster:** You need an existing EKS cluster configured with a Fargate profile that matches the `hello-keda-app` namespace.
+```
+hello-python-keda/
+├── app/
+│   ├── main.py                # Python Flask Hello World app
+│   └── Dockerfile             # Dockerfile to containerize the app
+├── k8s/
+│   ├── namespace.yaml         # Namespace definition
+│   ├── deployment.yaml        # App deployment (template with placeholder)
+│   ├── service.yaml           # LoadBalancer service to expose the app
+│   └── keda-scaler.yaml       # KEDA ScaledObject for autoscaling
+├── setup.sh                   # Script to build, deploy, install, and validate everything
+└── cleanup.sh                 # Script to destroy everything
+```
 
-    **Creating an EKS Cluster with Fargate (if you don't have one):**
-    You can create an EKS cluster with a Fargate profile using `eksctl`.
-    ```bash
-    eksctl create cluster \
-      --name hello-keda-cluster \
-      --region <YOUR_AWS_REGION> \
-      --fargate \
-      --profile-name hello-keda-fargate-profile \
-      --fargate-profile-selector namespace=hello-keda-app,labels={app=hello-keda-app}
-    ```
-    This command will create a cluster and a Fargate profile that will automatically schedule pods in the `hello-keda-app` namespace (with label `app=hello-keda-app`) onto Fargate.
+---
 
-    **Note on ECR Image Pull for Fargate:**
-    Fargate pods pull images using the IAM role associated with the Fargate profile. Ensure the Fargate profile's execution role has `ecr:GetDownloadUrlForLayer`, `ecr:BatchGetImage`, `ecr:BatchCheckLayerAvailability` permissions for your ECR repository.
+## 🚀 Prerequisites
 
-## Deployment Steps:
+Make sure you have the following installed and configured:
 
-1.  **Configure `deploy-pipeline.sh`:**
-    * Open `deploy-pipeline.sh`.
-    * Replace `<YOUR_AWS_ACCOUNT_ID>` with your actual AWS Account ID.
-    * Replace `<YOUR_AWS_REGION>` with your desired AWS region (e.g., `us-east-2`).
-    * Ensure `EKS_CLUSTER_NAME` matches your EKS cluster's name.
+- AWS CLI (`aws configure`)
+- Docker
+- kubectl
+- eksctl
+- Helm
 
-2.  **Make the script executable:**
-    ```bash
-    chmod +x deploy-pipeline.sh
-    ```
+---
 
-3.  **Run the deployment script:**
-    ```bash
-    ./deploy-pipeline.sh
-    ```
+## 🛠️ Setup Instructions
 
-## Post-Deployment:
-
-* **Check Pod Status:**
-    ```bash
-    kubectl get pods -n hello-keda-app
-    ```
-    You should see your `hello-keda-app-deployment` pod in a `Running` state.
-* **Check KEDA ScaledObject Status:**
-    ```bash
-    kubectl get scaledobject -n hello-keda-app
-    ```
-    It should show a healthy status and reflect the desired replica counts.
-* **Access the Application (Internal):**
-    If you have another pod in the same cluster, you can `curl` the service:
-    ```bash
-    kubectl run -it --rm --restart=Never debug-pod --image=busybox -- /bin/sh
-    # Inside the debug pod:
-    / # wget -O - hello-keda-app-service:80
-    ```
-* **Access the Application (External - requires LoadBalancer/Ingress):**
-    For external access, you would typically modify `k8s/service.yml` to `type: LoadBalancer` or set up an Ingress Controller (like AWS Load Balancer Controller) and Ingress resource. This is beyond the scope of this basic "Hello World" setup but is the next logical step for web apps.
-
-## Cleaning Up:
-
-To remove the deployed application:
+### 1. Clone the Repository
 
 ```bash
-kubectl delete -f k8s/keda-scaler.yml -n hello-keda-app
-kubectl delete -f k8s/service.yml -n hello-keda-app
-kubectl delete -f k8s/deployment.yml -n hello-keda-app
-kubectl delete -f k8s/namespace.yml # This will delete the namespace and all resources within it
+git clone https://github.com/your-repo/hello-python-keda.git
+cd hello-python-keda
+```
+
+### 2. Run the Setup Script
+
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+The script will:
+
+- Build and push the Docker image to Amazon ECR
+- Create an EKS cluster with Fargate
+- Deploy the Python app and expose it via LoadBalancer
+- Install KEDA and create a `ScaledObject`
+- Verify all resources are properly deployed
+
+---
+
+## 🌐 Access the App
+
+After setup completes, get the LoadBalancer URL:
+
+```bash
+kubectl get svc -n python-app
+```
+
+Visit the external IP/hostname in your browser.
+
+---
+
+## 📈 Autoscaling with KEDA
+
+This project uses **KEDA's ScaledObject** with **CPU-based scaling**:
+
+- `minReplicaCount: 1`
+- `maxReplicaCount: 5`
+- Scales out/in based on 50% CPU utilization
+
+> KEDA uses a Custom Resource Definition (CRD) to extend Kubernetes API.
+
+---
+
+## 🧹 Cleanup
+
+To tear down the entire environment:
+
+```bash
+chmod +x cleanup.sh
+./cleanup.sh
+```
+
+This will:
+
+- Delete KEDA resources
+- Uninstall Helm release
+- Delete all Kubernetes objects
+- Destroy the EKS cluster
+- Delete the ECR repository
+
+---
+
+## 📘 Resources
+
+- [KEDA Documentation](https://keda.sh/docs/)
+- [EKS Fargate](https://docs.aws.amazon.com/eks/latest/userguide/fargate.html)
+- [Helm](https://helm.sh/)
+- [Amazon ECR](https://docs.aws.amazon.com/AmazonECR/latest/userguide/what-is-ecr.html)
+
+---
+
+## 🧑‍💻 Author
+
+Made with 💻 by Ashish Shah
+

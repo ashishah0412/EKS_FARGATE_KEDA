@@ -18,4 +18,4 @@ COPY app/ .
 EXPOSE 5000
 
 # Run the hello.py when the container launches
-CMD ["python", "hello.py"]
+CMD ["python", "main.py"]
