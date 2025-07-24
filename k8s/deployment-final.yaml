@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-python
+  namespace: python-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-python
+  template:
+    metadata:
+      labels:
+        app: hello-python
+    spec:
+      containers:
+      - name: hello-python
+        image: 261358761679.dkr.ecr.us-east-1.amazonaws.com/hello-python:latest
+        ports:
+        - containerPort: 5000

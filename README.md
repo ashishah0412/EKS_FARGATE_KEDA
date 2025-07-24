@@ -46,8 +46,8 @@ Make sure you have the following installed and configured:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-repo/hello-python-keda.git
-cd hello-python-keda
+git clone https://github.com/ashishah0412/EKS_FARGATE_KEDA.git
+cd EKS_FARGATE_KEDA
 ```
 
 ### 2. Run the Setup Script
