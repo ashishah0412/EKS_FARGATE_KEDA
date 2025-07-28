@@ -9,22 +9,8 @@ spec:
   minReplicaCount: 1
   maxReplicaCount: 5
   triggers:
-  - type: cpu
-    metadata:
-      type: Utilization
-      value: "50"
-apiVersion: keda.sh/v1alpha1
-kind: ScaledObject
-metadata:
-  name: hello-python-scaler
-  namespace: python-app
-spec:
-  scaleTargetRef:
-    name: hello-python
-  minReplicaCount: 1
-  maxReplicaCount: 5
-  triggers:
-  - type: cpu
-    metadata:
-      type: Utilization
-      value: "50"
+    - type: cpu
+      metadata:
+        type: Utilization
+        value: "50"
+        # Adjust the value based on your CPU utilization threshold
