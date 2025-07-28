@@ -6,6 +6,7 @@ AWS_REGION="us-east-1"
 CLUSTER_NAME="hello-keda-cluster"
 ECR_REPO="hello-python"
 NAMESPACE="python-app"
+KEDA_NAMESPACE="keda"
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 ECR_URI="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest"
 
@@ -52,6 +53,8 @@ eksctl utils associate-iam-oidc-provider \
 
 echo "🔍 7. Checking/creating namespace..."
 kubectl get ns $NAMESPACE >/dev/null 2>&1 || kubectl create namespace $NAMESPACE
+kubectl get ns $APP_NAMESPACE >/dev/null 2>&1 || kubectl create namespace $APP_NAMESPACE
+
 
 echo "🛡️ 8. Creating Fargate profile for namespace (if not exists)..."
 if ! eksctl get fargateprofile --cluster $CLUSTER_NAME --region $AWS_REGION | grep $NAMESPACE >/dev/null 2>&1; then
@@ -59,11 +62,21 @@ if ! eksctl get fargateprofile --cluster $CLUSTER_NAME --region $AWS_REGION | gr
     --cluster $CLUSTER_NAME \
     --region $AWS_REGION \
     --name python-fargate \
-    --namespace $NAMESPACE \
-    --labels "env=python"
+    --namespace $NAMESPACE 
 else
   echo "✅ Fargate profile already exists for namespace $NAMESPACE"
 fi
+
+if ! eksctl get fargateprofile --cluster $CLUSTER_NAME --region $AWS_REGION | grep $KEDA_NAMESPACE >/dev/null 2>&1; then
+  eksctl create fargateprofile \
+    --cluster $CLUSTER_NAME \
+    --region $AWS_REGION \
+    --name keda-fargate \
+    --namespace $KEDA_NAMESPACE
+else
+  echo "✅ Fargate profile already exists for namespace $KEDA_NAMESPACE"
+fi  
+
 
 echo "📦 9. Installing or upgrading KEDA..."
 helm repo add kedacore https://kedacore.github.io/charts || true

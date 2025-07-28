@@ -16,5 +16,13 @@ spec:
       containers:
       - name: hello-python
         image: <YOUR_ECR_IMAGE_URI>
+        imagePullPolicy: Always         # ✅ Add this line
         ports:
         - containerPort: 5000
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "64Mi"
+          limits:
+            cpu: "500m"
+            memory: "128Mi"
